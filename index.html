@@ -16,8 +16,8 @@
 @media(max-width:420px){.side .panel{grid-template-columns:1fr}.q-title{font-size:20px}.opttext{font-size:14px}.option{gap:10px}.controls>button{width:100%}.number{flex:1;padding:10px}.number strong{font-size:20px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
-/* Wynikowy mem — osadzony w pliku, również offline */
-.meme-wrap{max-width:450px;margin:23px auto 12px;text-align:center;padding:16px;border:1px solid var(--line);border-radius:17px;background:#101d2e}
+/* Mem na zakończenie testu */
+.meme-wrap{max-width:450px;margin:18px auto;text-align:center;padding:0;border:0;background:transparent}
 .meme-wrap img{display:block;max-width:100%;max-height:375px;width:auto;height:auto;object-fit:contain;margin:0 auto;border-radius:12px}
 .meme-wrap figcaption{margin-top:12px;color:var(--text);font-weight:750;font-size:17px}
 .meme-wrap .meme-range{color:var(--muted);font-size:12px;font-weight:550;margin-top:4px}
@@ -31,14 +31,14 @@
     <h2 class="sidebar-title">Test ŚPB</h2>
     <p><strong>25 losowych pytań</strong> z jednej wspólnej puli 115. Każde nowe podejście losuje inne pytania i miesza odpowiedzi A–D.</p>
     <button id="start" class="primary full">Losuj nowy test (25 pytań)</button>
-    <p class="side-note">Zapisz odpowiedź, klikając A, B, C lub D. Na końcu zobaczysz wynik, wyjaśnienia i mem z kotem. Obsługa klawiaturą: <b>1–4</b> lub <b>A–D</b>.</p>
+    <p class="side-note">Zapisz odpowiedź, klikając A, B, C lub D. Na końcu zobaczysz wynik i mem z kotem. Obsługa klawiaturą: <b>1–4</b> lub <b>A–D</b>.</p>
   </div>
 </aside>
 <main class="main">
   <section class="hero"><div>
     <p class="eyebrow">Interaktywny test policyjny</p>
     <h1>Środki przymusu bezpośredniego</h1>
-    <p>Zestaw pytań z QuizMe, przepisany na jasny test ABCD, oraz 8 nowych zadań o pododdziałach zwartych i działaniach przy zgromadzeniach.</p>
+    <p>25 losowych pytań ABCD. Po kliknięciu od razu poznasz poprawną odpowiedź.</p>
     <div class="numbers"><div class="number"><strong>115</strong>pytań w puli</div><div class="number"><strong>25</strong>pytań w teście</div><div class="number"><strong>1</strong>poprawna odpowiedź</div></div>
   </div></section>
   <div class="banner"><strong>Podstawa prawna:</strong> ustawa z 24 maja 2013 r. o ŚPB i broni palnej, tekst jednolity Dz.U. 2026 poz. 244 z późn. zm. (w tym 2026 poz. 737 i 815). Pytania nawiązują do tematów ze szkoleń, ale nie są oficjalnym arkuszem egzaminacyjnym. <a href="https://dziennikustaw.gov.pl/DU/2026/244" target="_blank" rel="noopener">Zobacz ustawę</a>.</div>
@@ -58,10 +58,10 @@
   </section>
   <section id="welcome" class="hidden"></section>
   <section id="results" class="card hidden">
-    <div class="results-head"><div class="eyebrow">Twój wynik</div><div id="score" class="score"></div><h2 id="score-title"></h2><p id="score-detail"></p>
-      <figure class="meme-wrap" id="meme-wrap"><img id="meme-img" alt="Mem z kotem dobrany do wyniku testu"><figcaption id="meme-caption"></figcaption><div id="meme-range" class="meme-range"></div></figure>
-      <div class="result-actions"><button id="retryAll" class="primary">Nowy test — losuj 25 pytań</button><button id="review" class="secondary">Przejrzyj odpowiedzi</button></div>
-    </div><div id="mistakes" class="mistakes"></div>
+    <div class="results-head"><div class="eyebrow">Wynik testu</div><div id="score" class="score"></div><p id="score-detail"></p>
+      <figure class="meme-wrap" id="meme-wrap"><img id="meme-img" alt="Mem z kotem dobrany do wyniku testu"></figure>
+      <div class="result-actions"><button id="retryAll" class="primary">Nowy test — losuj 25 pytań</button><button id="review" class="secondary">Wróć do pytań</button></div>
+    </div>
   </section>
   <footer class="foot">Materiał edukacyjny, stan weryfikacji: 6.11.2026. Źródła: ustawa o ŚPB i broni palnej, wskazane quizy QuizMe oraz art. 41–44. Przed realnymi działaniami stosuj aktualne przepisy i polecenia zgodne z prawem.</footer>
 </main>
@@ -85,7 +85,7 @@ function updateTimer(){$('timer-label').textContent=displayClock(Date.now()-game
 function getq(index){return DB.find(q=>q.id===game.ids[index])}
 function answered(){return game.ids.filter(id=>game.answers[id]!==undefined).length}
 function getCorrectIndex(q){return game.options[q.id].findIndex(o=>o.right)}
-function render(){if(!game||!game.ids.length)return;const q=getq(game.current),current=game.answers[q.id],locked=reviewMode||game.learn&&current!==undefined;
+function render(){if(!game||!game.ids.length)return;const q=getq(game.current),current=game.answers[q.id],locked=reviewMode||current!==undefined;
  $('progress-label').textContent=`Pytanie ${game.current+1} z ${game.ids.length}`;
  $('answered-label').textContent=`Odpowiedziano: ${answered()} / ${game.ids.length}`;
  let pct=100*answered()/game.ids.length;$('meter-fill').style.width=pct+'%';$('meter').setAttribute('aria-valuenow',Math.round(pct));
@@ -99,14 +99,19 @@ function render(){if(!game||!game.ids.length)return;const q=getq(game.current),c
  $('prev').disabled=game.current===0;$('next').disabled=game.current===game.ids.length-1;$('next').textContent=game.current===game.ids.length-1?'Ostatnie pytanie':'Dalej';$('flag').textContent=game.flags.includes(q.id)?'★ Oznaczone do powtórki':'☆ Oznacz do powtórki';
  const grid=$('qgrid');grid.replaceChildren();game.ids.forEach((id,idx)=>{const b=document.createElement('button');b.className='cell'+(idx===game.current?' current':'')+(game.answers[id]!==undefined?' done':'')+(game.flags.includes(id)?' flagged':'');b.textContent=idx+1;b.title='Przejdź do pytania '+(idx+1);b.addEventListener('click',()=>move(idx));grid.append(b)});
  save();}
-function selectOption(i){if(!game||reviewMode)return;const q=getq(game.current);if(game.learn&&game.answers[q.id]!==undefined)return;game.answers[q.id]=i;render()}
+function selectOption(i){if(!game||reviewMode)return;const q=getq(game.current);if(game.answers[q.id]!==undefined)return;game.answers[q.id]=i;render()}
 function move(i){if(game&&i>=0&&i<game.ids.length){game.current=i;render();let card=$('q-title');card.scrollIntoView({block:'nearest',behavior:'smooth'})}}
 function scoreFor(g){let correct=0,wrong=[];for(const id of g.ids){const q=DB.find(x=>x.id===id),sel=g.answers[id];if(sel!==undefined&&g.options[id][sel]?.right)correct++;else wrong.push(id)}return {correct,wrong,total:g.ids.length}}
 function finish(){if(!game)return;let missing=game.ids.length-answered();if(missing&&!confirm(`Nie zaznaczono odpowiedzi na ${missing} pytań. Zakończyć i sprawdzić wynik?`))return;game.finished=true;clearInterval(tick);showResults()}
-function showResults(){const sc=scoreFor(game),pct=Math.round(sc.correct/sc.total*100);$('exam').classList.add('hidden');$('results').classList.remove('hidden');$('score').textContent=pct+'%';$('score-title').textContent=pct===100?'Bez błędów!':pct>=80?'Bardzo dobry wynik':pct>=60?'Dobry kierunek':'Warto powtórzyć materiał';$('score-detail').textContent=`Poprawnych: ${sc.correct} z ${sc.total} · Błędnych lub pustych: ${sc.wrong.length} · Czas: ${displayClock(Date.now()-game.started)}`;
+function showResults(){
+ const sc=scoreFor(game),pct=Math.round(sc.correct/sc.total*100);
+ $('exam').classList.add('hidden');$('results').classList.remove('hidden');
+ $('score').textContent=pct+'%';
+ $('score-detail').textContent=`${sc.correct} / ${sc.total} poprawnych`;
  const memeIndex=sc.correct<=4?0:sc.correct<=9?1:sc.correct<=14?2:sc.correct<=19?3:sc.correct<=23?4:5;
- const meme=MEMES[memeIndex]; $('meme-img').src=meme.src; $('meme-caption').textContent=meme.caption; $('meme-range').textContent=meme.range;
- const list=$('mistakes');list.replaceChildren();if(!sc.wrong.length){list.textContent='Wszystkie odpowiedzi poprawne.'}else{const title=document.createElement('h3');title.textContent='Pytania do powtórki';list.append(title);for(let k=0;k<sc.wrong.length;k++){const id=sc.wrong[k],q=DB.find(x=>x.id===id),sel=game.answers[id],row=document.createElement('section');row.className='mistake';const h=document.createElement('h3');h.textContent=`${k+1}. ${q.q}`;const bad=document.createElement('p');bad.textContent='Twoja odpowiedź: '+(sel===undefined?'brak':game.options[id][sel]?.text);const good=document.createElement('p');let b=document.createElement('b');b.textContent='Poprawnie: ';good.append(b,document.createTextNode(q.a));const note=document.createElement('p');note.textContent='Podstawa: '+q.basis+(q.note?' · '+q.note:'');row.append(h,bad,good,note);list.append(row)}}window.scrollTo({top:0,behavior:'smooth'})}
+ $('meme-img').src=MEMES[memeIndex].src;
+ window.scrollTo({top:0,behavior:'smooth'});
+}
 function startSelected(){init(shuffle(DB).slice(0,25),false)}
 $('start').addEventListener('click',()=>{if(game&&!game.finished&&Object.keys(game.answers).length&&!confirm('Rozpoczęcie nowego testu nadpisze poprzedni. Kontynuować?'))return;startSelected()});
 $('prev').addEventListener('click',()=>move(game.current-1));$('next').addEventListener('click',()=>move(game.current+1));$('finish').addEventListener('click',finish);
